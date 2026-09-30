@@ -7,3 +7,6 @@ output/
 mapas_output
 projeto_bolsa_bia/
 
+# Ambientes virtuais e configurações locais do editor
+venv_*/
+.vscode/

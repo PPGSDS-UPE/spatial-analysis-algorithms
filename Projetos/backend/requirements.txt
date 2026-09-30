@@ -10,7 +10,7 @@ geopandas
 mapclassify
 
 # Acesso a Fontes de Dados Externas
-pysus
+pysus==1.0.1  # 2.x mudou a API (pysus.ftp.databases não existe mais)
 sidrapy
 geobr
 requests
