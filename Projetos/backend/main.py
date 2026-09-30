@@ -18,6 +18,7 @@ from src.infrastructure.controllers.pysus.sih.routes import sih_router
 from src.infrastructure.controllers.pysus.sim.routes import sim_router
 from src.infrastructure.controllers.pysus.sinan.routes import sinan_router
 from src.infrastructure.controllers.pysus.sinasc.routes import sinasc_router
+from src.infrastructure.controllers.pysus.esus.routes import esus_router
 
 # Módulo Sidra
 from src.infrastructure.controllers.sidra.routes import sidra_router 
@@ -64,6 +65,7 @@ app.include_router(sih_router, prefix="/pysus/sih")
 app.include_router(sim_router, prefix="/pysus/sim")
 app.include_router(sinan_router, prefix="/pysus/sinan")
 app.include_router(sinasc_router, prefix="/pysus/sinasc")
+app.include_router(esus_router, prefix="/pysus/esus")
 
 # Módulo Sidra
 app.include_router(sidra_router, prefix="/sidra")

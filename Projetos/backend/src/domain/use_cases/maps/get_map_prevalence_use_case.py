@@ -3,17 +3,25 @@ from typing import Optional
 
 from src.domain.processors.prevalence_processor import PrevalenceDataProcessor 
 from src.domain.use_cases.ibge.population.fetch_data_population_use_case import FetchDataPopulationUseCase
-from src.domain.use_cases.pysus.sinan.fetch_data_sinan_use_case import FetchDataSinanUseCase 
+from src.domain.use_cases.pysus.sinan.fetch_data_sinan_use_case import FetchDataSinanUseCase
+from src.domain.use_cases.pysus.esus.fetch_data_esus_use_case import FetchDataEsusUseCase
 from src.infrastructure.shared import map_plotter
 
+# Fontes de casos suportadas; todas retornam {"summary": [{municipality_code, total_cases}], ...}
+CASE_SOURCES = {
+    "sinan": FetchDataSinanUseCase,
+    "esus": FetchDataEsusUseCase,
+}
+
 class GetMapPrevalenceUseCase:
-    
+
     def execute(
-        self, 
-        state_abbr: str, 
-        year: int, 
+        self,
+        state_abbr: str,
+        year: int,
         disease_code: str,
-        metric_column: str
+        metric_column: str,
+        source: str = "sinan"
     ) -> Optional[io.BytesIO]:
         
         
@@ -25,17 +33,17 @@ class GetMapPrevalenceUseCase:
             print("❌ Falha: Dados de população não encontrados.")
             return None
 
-        sinan_use_case = FetchDataSinanUseCase()
-        sinan_data_raw = sinan_use_case.execute(
+        cases_use_case = CASE_SOURCES[source]()
+        sinan_data_raw = cases_use_case.execute(
             disease_code=disease_code,
-            years=[year], 
+            years=[year],
             states=[state_abbr]
         )
-        
+
         sinan_summary = sinan_data_raw.get('summary') if sinan_data_raw else None
-        
+
         if not sinan_summary:
-            print("❌ Falha: Dados de casos (SINAN) não encontrados.")
+            print(f"❌ Falha: Dados de casos ({source.upper()}) não encontrados.")
             return None
 
         

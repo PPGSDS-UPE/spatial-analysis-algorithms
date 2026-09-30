@@ -126,22 +126,56 @@ def fetch_sinan_data(params: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
         return None
     
 @st.cache_data
-def fetch_prevalence_map(state_abbr: str, year: int, disease_code: str, metric: str) -> Optional[bytes]:
+def fetch_esus_variables() -> Optional[Dict[str, Any]]:
+    """Fetches the list of variables (diseases/conditions) available for e-SUS Notifica."""
+    try:
+        response = requests.get(f"{API_URL}/pysus/esus/variables")
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error connecting to the API to fetch e-SUS variables: {e}")
+        return None
+
+@st.cache_data
+def fetch_esus_data(params: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Requests a summary of e-SUS Notifica data from the API based on disease, year, and state."""
+    base_url = f"{API_URL}/pysus/esus/fetch-data"
+
+    st.info(f"Sending query to API: {base_url} with parameters: {params}")
+
+    try:
+        response = requests.get(base_url, params=params, timeout=300)
+        response.raise_for_status()
+        return response.json()
+
+    except requests.exceptions.RequestException as e:
+        st.error(f"❌ Error fetching e-SUS data from the API.")
+        if e.response is not None:
+              try:
+                  error_detail = e.response.json().get("detail", e.response.text)
+                  st.write(f"Server error details: {error_detail}")
+              except:
+                  st.write(f"Network error details: {e}")
+        return None
+
+@st.cache_data
+def fetch_prevalence_map(state_abbr: str, year: int, disease_code: str, metric: str, source: str = "sinan") -> Optional[bytes]:
     """ Requests the prevalence map image from the backend API. """
-    
+
     # 1. MUDANÇA: Atualiza a URL base para a nova rota
     base_url = f"{API_URL}/maps/{state_abbr}/{year}/prevalence"
 
     # 2. MUDANÇA: Atualiza os parâmetros da query
     params = {
         "disease_code": disease_code,
-        "metric": metric
+        "metric": metric,
+        "source": source
     }
 
     st.info(f"Calling API: {base_url} with params: {params}")
 
     try:
-        response = requests.get(base_url, params=params, timeout=60)
+        response = requests.get(base_url, params=params, timeout=300)
         response.raise_for_status()  # Lança exceção para status 4xx/5xx
         return response.content
         # response.content contains the raw bytes (PNG image) from the backend

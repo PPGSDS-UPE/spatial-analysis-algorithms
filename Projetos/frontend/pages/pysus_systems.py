@@ -29,6 +29,12 @@ if systems_list:
                         icon="➡️"
                         
                     )
+                elif system['code'] == 'ESUS':
+                    st.page_link(
+                        "pages/esus_chagas_cronica.py",
+                        label="Explore Doença de Chagas Crônica",
+                        icon="➡️"
+                    )
                 elif system['code'] == 'CNES':
                 
                     st.page_link(

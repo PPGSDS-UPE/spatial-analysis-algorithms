@@ -32,6 +32,10 @@ class GetAvailablePysusSystemsUseCase:
             {
                 "code": "SIA",
                 "name": "Sistema de Informações Ambulatoriais"
+            },
+            {
+                "code": "ESUS",
+                "name": "e-SUS Notifica"
             }
             # Adicione outros sistemas aqui se sua aplicação passar a suportá-los
         ]

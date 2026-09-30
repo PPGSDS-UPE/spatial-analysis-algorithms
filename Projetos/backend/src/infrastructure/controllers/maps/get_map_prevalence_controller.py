@@ -2,16 +2,17 @@ from fastapi import HTTPException
 from fastapi.responses import Response 
 from src.domain.use_cases.maps.get_map_prevalence_use_case import GetMapPrevalenceUseCase
 
-def generate_prevalence_map(state_abbr: str, year: int, metric: str, disease_code: str):
-    
+def generate_prevalence_map(state_abbr: str, year: int, metric: str, disease_code: str, source: str = "sinan"):
+
     try:
         use_case = GetMapPrevalenceUseCase()
-        
+
         image_buffer = use_case.execute(
             state_abbr=state_abbr,
             year=year,
             metric_column=metric,
-            disease_code=disease_code
+            disease_code=disease_code,
+            source=source
         )
 
         if image_buffer is None:
@@ -22,5 +23,7 @@ def generate_prevalence_map(state_abbr: str, year: int, metric: str, disease_cod
         
         return Response(content=image_buffer.read(), media_type="image/png")
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ocorreu um erro interno no servidor: {e}")

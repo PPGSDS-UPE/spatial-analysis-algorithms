@@ -18,7 +18,11 @@ class BirthRateMetric(str, Enum):
 class PrevalenceMetric(str, Enum):
     total_cases = "total_cases"
     # O nome da métrica deve bater com o definido no 'GetMapPrevalenceUseCase'
-    prevalence_per_100000 = "prevalence_per_100000" 
+    prevalence_per_100000 = "prevalence_per_100000"
+
+class CaseSource(str, Enum):
+    sinan = "sinan"
+    esus = "esus"
 
 maps_router = APIRouter()
 
@@ -65,14 +69,19 @@ def get_map_prevalence_route(
     metric: PrevalenceMetric = Query(
         default=PrevalenceMetric.prevalence_per_100000,
         description="A métrica de prevalência a ser exibida no mapa."
+    ),
+    source: CaseSource = Query(
+        default=CaseSource.sinan,
+        description="Fonte dos casos: 'sinan' ou 'esus' (e-SUS Notifica, ex.: 'DCCR' para Chagas Crônica)."
     )
 ):
-    
+
     return generate_prevalence_map(
-        state_abbr=state_abbr, 
-        year=year, 
+        state_abbr=state_abbr,
+        year=year,
         metric=metric.value,
-        disease_code=disease_code
+        disease_code=disease_code,
+        source=source.value
     )
 
 @maps_router.get(
