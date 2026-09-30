@@ -8,6 +8,10 @@ for _stream in (sys.stdout, sys.stderr):
     if hasattr(_stream, "reconfigure"):
         _stream.reconfigure(encoding="utf-8", errors="replace")
 
+# Corrige o bug do pysus 1.x no Windows; precisa rodar antes dos imports que usam pysus
+from src.infrastructure.shared.pysus_compat import apply_pysus_windows_patch
+apply_pysus_windows_patch()
+
 # --- 1. IMPORTS DOS ROTEADORES (CORRIGIDOS) ---
 
 # Módulo PySUS
