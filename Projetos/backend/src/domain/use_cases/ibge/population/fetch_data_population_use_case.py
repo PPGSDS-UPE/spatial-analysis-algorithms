@@ -23,28 +23,22 @@ class FetchDataPopulationUseCase:
             print(f"Erro: sigla de estado '{state_abbr}' inválida.")
             return None
 
-        table_to_query = CENSUS_TABLE_CODE if year == CENSUS_YEAR else ESTIMATE_TABLE_CODE
-        variable_to_query = CENSUS_VARIABLE_CODE if year == CENSUS_YEAR else ESTIMATE_VARIABLE_CODE
+        # O IBGE não publica estimativas para todos os anos (ex.: 2023, logo após o Censo 2022).
+        # Se o ano pedido não tiver dados, usa o ano disponível mais próximo, priorizando o Censo.
+        candidate_years = [year] + sorted(
+            {CENSUS_YEAR, *range(year - 3, year + 4)} - {year},
+            key=lambda y: (y != CENSUS_YEAR, abs(y - year), -y)
+        )
 
-        try:
-            # --- LÓGICA CORRIGIDA ---
-            # A API espera o formato "in n3 XX" (municípios dentro do estado XX)
-            territorial_scope = f"in n3 {state_code}"
+        raw_data_table = None
+        for candidate_year in candidate_years:
+            raw_data_table = self._query_sidra(candidate_year, state_code)
+            if raw_data_table is not None:
+                if candidate_year != year:
+                    print(f"Aviso: sem dados de população para {year}; usando {candidate_year}.")
+                break
 
-            raw_data_table = sidrapy.get_table(
-                table_code=table_to_query,
-                territorial_level="6",  
-                ibge_territorial_code=territorial_scope,
-                variable=variable_to_query,
-                period=str(year),
-                header="y"
-            )
-        except Exception as e:
-            print(f"Erro ao buscar dados do SIDRA. Sintaxe usada: '{territorial_scope}'.")
-            print(f"Detalhes: {e}")
-            return None
-
-        if raw_data_table is None or len(raw_data_table) <= 1:
+        if raw_data_table is None:
             print("Nenhum dado retornado pela API SIDRA.")
             return None
 
@@ -85,3 +79,28 @@ class FetchDataPopulationUseCase:
         ]
 
         return final_dataframe.to_dict(orient='records')
+
+    @staticmethod
+    def _query_sidra(year: int, state_code: str) -> Optional[Any]:
+        table_to_query = CENSUS_TABLE_CODE if year == CENSUS_YEAR else ESTIMATE_TABLE_CODE
+        variable_to_query = CENSUS_VARIABLE_CODE if year == CENSUS_YEAR else ESTIMATE_VARIABLE_CODE
+
+        # A API espera o formato "in n3 XX" (municípios dentro do estado XX)
+        territorial_scope = f"in n3 {state_code}"
+
+        try:
+            raw_data_table = sidrapy.get_table(
+                table_code=table_to_query,
+                territorial_level="6",
+                ibge_territorial_code=territorial_scope,
+                variable=variable_to_query,
+                period=str(year),
+                header="y"
+            )
+        except Exception as e:
+            print(f"Erro ao buscar dados do SIDRA para {year} (tabela {table_to_query}): {e}")
+            return None
+
+        if raw_data_table is None or len(raw_data_table) <= 1:
+            return None
+        return raw_data_table

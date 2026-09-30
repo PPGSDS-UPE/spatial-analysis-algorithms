@@ -1,5 +1,12 @@
+import sys
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+# Garante que prints com acentos/emojis não quebrem no console do Windows (cp1252)
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
 
 # --- 1. IMPORTS DOS ROTEADORES (CORRIGIDOS) ---
 

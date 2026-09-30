@@ -14,6 +14,6 @@ METRIC_OPTIONS = {
 }
 
 METRIC_OPTIONS_SINAN = {
-    "Taxa de Prevalência (por 10.000 hab.)": "prevalence_per_100000",
-    "Total de Casos Confirmados": "casos_total"
+    "Taxa de Prevalência (por 100.000 hab.)": "prevalence_per_100000",
+    "Total de Casos Confirmados": "total_cases"
 }
