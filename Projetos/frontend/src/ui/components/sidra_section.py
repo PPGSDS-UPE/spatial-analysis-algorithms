@@ -44,13 +44,8 @@ def display_sidra_query_component():
         """ SECTION 1: Table Selection """
         st.header("1. Select the Table")
         
-        # Usamos o cache do Streamlit aqui para evitar buscar a 
-        # lista de tabelas a cada clique no formulário
-        @st.cache_data 
-        def get_table_list():
-            return fetch_table_list()
-
-        formatted_table_list = get_table_list()
+        # fetch_table_list já é cacheada (apenas em caso de sucesso)
+        formatted_table_list = fetch_table_list()
 
         if formatted_table_list:
             table_options = [f"{t['id']} - {t['name']}" for t in formatted_table_list]

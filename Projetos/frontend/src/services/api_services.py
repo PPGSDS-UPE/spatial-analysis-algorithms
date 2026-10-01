@@ -1,11 +1,30 @@
 # src/services/api_service.py
 
+import functools
 import streamlit as st
 import requests
 from typing import Optional, Dict, Any, List
 from src.ui.constants import API_URL
 
-@st.cache_data
+
+def cache_success(func):
+    """
+    Igual ao @st.cache_data, mas não guarda falhas: quando a função retorna None
+    (erro de conexão ou da API), a entrada é descartada e a próxima chamada tenta de novo.
+    """
+    cached_func = st.cache_data(func)
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        result = cached_func(*args, **kwargs)
+        if result is None:
+            cached_func.clear(*args, **kwargs)
+        return result
+
+    wrapper.clear = cached_func.clear
+    return wrapper
+
+@cache_success
 def fetch_table_list() -> Optional[List[Dict[str, Any]]]:
     try:
         response = requests.get(f"{API_URL}/sidra/tables")
@@ -27,7 +46,7 @@ def fetch_table_list() -> Optional[List[Dict[str, Any]]]:
         st.error(f"Error connecting to the API to fetch tables: {e}")
         return None
 
-@st.cache_data
+@cache_success
 def fetch_table_metadata(table_id: int) -> Optional[Dict[str, Any]]:
     try:
         response = requests.get(f"{API_URL}/sidra/tables/{table_id}")
@@ -36,7 +55,7 @@ def fetch_table_metadata(table_id: int) -> Optional[Dict[str, Any]]:
     except requests.exceptions.RequestException:
         return None
     
-@st.cache_data
+@cache_success
 def fetch_sidra_data(params: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
     try:
         response = requests.get(f"{API_URL}/sidra/tables/fetch-specific", params=params)
@@ -51,7 +70,7 @@ def fetch_sidra_data(params: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
                 st.write(f"Error details: {e}")
         return None
     
-@st.cache_data
+@cache_success
 def fetch_birthrate_map(state_abbr: str, year: int, metric_column: str) -> Optional[bytes]:
     base_url = f"{API_URL}/maps/{state_abbr}/{year}/birth-rate"
 
@@ -76,7 +95,7 @@ def fetch_birthrate_map(state_abbr: str, year: int, metric_column: str) -> Optio
                   st.write(f"Network error details: {e}")
         return None
     
-@st.cache_data
+@cache_success
 def fetch_pysus_systems() -> Optional[List[Dict[str, Any]]]:
     """Fetches the list of all supported PySUS systems from the API."""
     try:
@@ -87,7 +106,7 @@ def fetch_pysus_systems() -> Optional[List[Dict[str, Any]]]:
         st.error(f"Error connecting to the API to fetch PySUS systems: {e}")
         return None
 
-@st.cache_data
+@cache_success
 def fetch_sinan_variables() -> Optional[Dict[str, Any]]:
     """Fetches the list of variables (diseases/conditions) available for SINAN."""
     try:
@@ -98,7 +117,7 @@ def fetch_sinan_variables() -> Optional[Dict[str, Any]]:
         st.error(f"Error connecting to the API to fetch SINAN variables: {e}")
         return None
     
-@st.cache_data   
+@cache_success
 def fetch_sinan_data(params: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
     """Requests a summary of SINAN data from the API based on disease, year, and state."""
     
@@ -125,7 +144,7 @@ def fetch_sinan_data(params: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
                   st.write(f"Network error details: {e}")
         return None
     
-@st.cache_data
+@cache_success
 def fetch_esus_variables() -> Optional[Dict[str, Any]]:
     """Fetches the list of variables (diseases/conditions) available for e-SUS Notifica."""
     try:
@@ -136,7 +155,7 @@ def fetch_esus_variables() -> Optional[Dict[str, Any]]:
         st.error(f"Error connecting to the API to fetch e-SUS variables: {e}")
         return None
 
-@st.cache_data
+@cache_success
 def fetch_esus_data(params: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """Requests a summary of e-SUS Notifica data from the API based on disease, year, and state."""
     base_url = f"{API_URL}/pysus/esus/fetch-data"
@@ -158,7 +177,7 @@ def fetch_esus_data(params: Dict[str, Any]) -> Optional[Dict[str, Any]]:
                   st.write(f"Network error details: {e}")
         return None
 
-@st.cache_data
+@cache_success
 def fetch_prevalence_map(state_abbr: str, year: int, disease_code: str, metric: str, source: str = "sinan", filters: Optional[Dict[str, Any]] = None) -> Optional[bytes]:
     """ Requests the prevalence map image from the backend API. """
 
@@ -194,7 +213,7 @@ def fetch_prevalence_map(state_abbr: str, year: int, disease_code: str, metric: 
                 st.write(f"Network error details: {e}")
         return None
     
-@st.cache_data
+@cache_success
 def fetch_regional_layers_map(
     state_abbr: str, 
     year: int, 
@@ -236,7 +255,7 @@ def fetch_regional_layers_map(
                 st.write(f"Network error details: {e}")
         return None
     
-@st.cache_data
+@cache_success
 def fetch_sim_variables() -> Optional[Dict[str, Any]]:
     
     base_url = f"{API_URL}/pysus/sim/variables"
@@ -260,7 +279,7 @@ def fetch_sim_variables() -> Optional[Dict[str, Any]]:
                 st.write(f"Network error details: {e}")
         return None
     
-@st.cache_data
+@cache_success
 def fetch_sim_data(
     group_code: str, 
     years: List[int], 
@@ -307,7 +326,7 @@ def fetch_sim_data(
                 st.write(f"Network error details: {e}")
         return None
     
-@st.cache_data
+@cache_success
 def fetch_sinasc_variables() -> Optional[Dict[str, Any]]:
     
     base_url = f"{API_URL}/pysus/sinasc/variables"
@@ -331,7 +350,7 @@ def fetch_sinasc_variables() -> Optional[Dict[str, Any]]:
                 st.write(f"Network error details: {e}")
         return None
     
-@st.cache_data
+@cache_success
 def fetch_sinasc_data(
     group_code: str, 
     years: List[int], 
