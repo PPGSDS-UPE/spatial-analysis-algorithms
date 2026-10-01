@@ -4,9 +4,10 @@ from typing import List, Optional, Dict, Any
 from fastapi.concurrency import run_in_threadpool
 
 from src.domain.use_cases.pysus.sinan.fetch_data_sinan_use_case import FetchDataSinanUseCase
+from src.domain.processors.case_filters import CaseFilters
 
 # A função do controller agora também é 'async def'
-async def fetch_sinan_data_controller(disease_code: str, years: List[int], states: Optional[List[str]]):
+async def fetch_sinan_data_controller(disease_code: str, years: List[int], states: Optional[List[str]], filters: Optional[CaseFilters] = None):
    
     try:
         params = {
@@ -14,11 +15,15 @@ async def fetch_sinan_data_controller(disease_code: str, years: List[int], state
             "years": years,
             "states": states
         }
+        if filters and not filters.is_empty():
+            params["filters"] = filters.to_dict()
 
         use_case = FetchDataSinanUseCase()
 
         
-        result_dict: Optional[Dict[str, Any]] = await run_in_threadpool(use_case.execute, **params)
+        result_dict: Optional[Dict[str, Any]] = await run_in_threadpool(
+            use_case.execute, disease_code=disease_code, years=years, states=states, filters=filters
+        )
         
        
         if result_dict and "summary" in result_dict:

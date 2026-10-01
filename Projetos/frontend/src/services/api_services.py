@@ -159,7 +159,7 @@ def fetch_esus_data(params: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         return None
 
 @st.cache_data
-def fetch_prevalence_map(state_abbr: str, year: int, disease_code: str, metric: str, source: str = "sinan") -> Optional[bytes]:
+def fetch_prevalence_map(state_abbr: str, year: int, disease_code: str, metric: str, source: str = "sinan", filters: Optional[Dict[str, Any]] = None) -> Optional[bytes]:
     """ Requests the prevalence map image from the backend API. """
 
     # 1. MUDANÇA: Atualiza a URL base para a nova rota
@@ -169,7 +169,8 @@ def fetch_prevalence_map(state_abbr: str, year: int, disease_code: str, metric: 
     params = {
         "disease_code": disease_code,
         "metric": metric,
-        "source": source
+        "source": source,
+        **(filters or {})
     }
 
     st.info(f"Calling API: {base_url} with params: {params}")

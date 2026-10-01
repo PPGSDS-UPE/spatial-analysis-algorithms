@@ -5,6 +5,7 @@ from src.domain.processors.prevalence_processor import PrevalenceDataProcessor
 from src.domain.use_cases.ibge.population.fetch_data_population_use_case import FetchDataPopulationUseCase
 from src.domain.use_cases.pysus.sinan.fetch_data_sinan_use_case import FetchDataSinanUseCase
 from src.domain.use_cases.pysus.esus.fetch_data_esus_use_case import FetchDataEsusUseCase
+from src.domain.processors.case_filters import CaseFilters
 from src.infrastructure.shared import map_plotter
 
 # Fontes de casos suportadas; todas retornam {"summary": [{municipality_code, total_cases}], ...}
@@ -21,7 +22,8 @@ class GetMapPrevalenceUseCase:
         year: int,
         disease_code: str,
         metric_column: str,
-        source: str = "sinan"
+        source: str = "sinan",
+        filters: Optional[CaseFilters] = None
     ) -> Optional[io.BytesIO]:
         
         
@@ -37,7 +39,8 @@ class GetMapPrevalenceUseCase:
         sinan_data_raw = cases_use_case.execute(
             disease_code=disease_code,
             years=[year],
-            states=[state_abbr]
+            states=[state_abbr],
+            filters=filters
         )
 
         sinan_summary = sinan_data_raw.get('summary') if sinan_data_raw else None
@@ -79,6 +82,12 @@ class GetMapPrevalenceUseCase:
         }
         
         details = metric_details.get(metric_column)
+        if details and filters and not filters.is_empty():
+            # Com filtros, o denominador continua sendo a população total do município
+            details = {
+                "title": f"{details['title']}\n{filters.describe()}",
+                "label": details["label"] + (" (pop. total)" if metric_column != "total_cases" else "")
+            }
         if not details:
             print(f"❌ Métrica '{metric_column}' inválida para este mapa.")
             print(f"   Métricas disponíveis: {list(metric_details.keys())}")

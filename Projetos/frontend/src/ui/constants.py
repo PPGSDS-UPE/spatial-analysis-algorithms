@@ -17,3 +17,31 @@ METRIC_OPTIONS_SINAN = {
     "Taxa de Prevalência (por 100.000 hab.)": "prevalence_per_100000",
     "Total de Casos Confirmados": "total_cases"
 }
+
+# Filtros de casos (valores aceitos pela API em races/sexes)
+RACE_OPTIONS = {
+    "Branca": "branca",
+    "Preta": "preta",
+    "Amarela": "amarela",
+    "Parda": "parda",
+    "Indígena": "indigena",
+    "Ignorado": "ignorado",
+}
+
+SEX_OPTIONS = {
+    "Masculino": "masculino",
+    "Feminino": "feminino",
+    "Ignorado": "ignorado",
+}
+
+# Escolaridade (CS_ESCOL_N). O SINAN é agrupado no backend nas mesmas categorias do e-SUS.
+EDUCATION_OPTIONS = {
+    "Nenhuma/Analfabeto": "nenhuma",
+    "Fundamental incompleto": "fundamental_incompleto",
+    "Fundamental completo": "fundamental_completo",
+    "Médio incompleto": "medio_incompleto",
+    "Médio completo": "medio_completo",
+    "Superior": "superior",
+    "Ignorado": "ignorado",
+    "Não se aplica": "nao_se_aplica",
+}

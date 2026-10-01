@@ -11,6 +11,7 @@ from src.services.api_services import (
 )
 
 from src.ui.constants import METRIC_OPTIONS_SINAN
+from src.ui.components.case_filters_section import display_case_filters
 
 # Anos publicados no FTP do e-SUS Notifica (FINAIS: 2023; PRELIM: 2024-2025)
 ESUS_MIN_YEAR = 2023
@@ -76,6 +77,8 @@ def display_esus_query_section():
                 key="esus_global_state"
             ).upper()
 
+        case_filters, filters_description = display_case_filters("esus")
+
     st.markdown("---")
 
     # ==============================================================================
@@ -94,10 +97,12 @@ def display_esus_query_section():
             params: Dict[str, Any] = {
                 "disease_code": disease_code,
                 "years": [global_year],
-                "states": [global_state] if global_state else None
+                "states": [global_state] if global_state else None,
+                **case_filters
             }
 
-            st.info(f"Buscando dados: {disease_code}, Ano: {global_year}, Estado: {global_state}")
+            st.info(f"Buscando dados: {disease_code}, Ano: {global_year}, Estado: {global_state}"
+                    + (f" | Filtros: {filters_description}" if filters_description else ""))
 
             with st.spinner("Fetching e-SUS data..."):
                 data = fetch_esus_data(params)
@@ -156,14 +161,16 @@ def display_esus_query_section():
                         year=global_year,
                         metric=metric_column_name,
                         disease_code=disease_code,
-                        source="esus"
+                        source="esus",
+                        filters=case_filters
                     )
 
                     if map_content:
                         st.success("✅ Map generated successfully!")
                         st.image(
                             BytesIO(map_content),
-                            caption=f"Map: {selected_disease_label} ({metric_label_map}) in {global_state}/{global_year}",
+                            caption=f"Map: {selected_disease_label} ({metric_label_map}) in {global_state}/{global_year}"
+                                    + (f" — Filtros: {filters_description}" if filters_description else ""),
                             use_container_width=True
                         )
                     else:

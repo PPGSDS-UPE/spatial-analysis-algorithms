@@ -4,11 +4,12 @@ from typing import List, Dict, Optional, Any
 from collections import Counter
 import pyarrow.parquet as pq
 from pathlib import Path 
-from src.infrastructure.shared import data_utils 
+from src.infrastructure.shared import data_utils
+from src.domain.processors.case_filters import CaseFilters, apply_case_filters
 
 class FetchDataSinanUseCase:
    
-    def execute(self, disease_code: str, years: List[int], states: Optional[List[str]] = None) -> Optional[Dict[str, Any]]:
+    def execute(self, disease_code: str, years: List[int], states: Optional[List[str]] = None, filters: Optional[CaseFilters] = None) -> Optional[Dict[str, Any]]:
         try:
             print(f"Buscando arquivos no SINAN para o agravo '{disease_code}'...")
             sinan_db = SINAN().load()
@@ -51,6 +52,7 @@ class FetchDataSinanUseCase:
                         
                         
                         filtered_chunk_df = data_utils.filter_dataframe_by_states(chunk_df, states, municipality_col)
+                        filtered_chunk_df = apply_case_filters(filtered_chunk_df, filters)
                         
                         partial_counts = filtered_chunk_df.dropna(subset=[municipality_col])[municipality_col].value_counts()
                         total_counts.update(partial_counts.to_dict())

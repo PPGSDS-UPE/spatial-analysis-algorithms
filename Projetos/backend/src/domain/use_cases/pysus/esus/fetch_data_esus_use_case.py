@@ -7,6 +7,7 @@ from typing import List, Dict, Optional, Any
 from dbfread import DBF
 from pyreaddbc import dbc2dbf
 from src.infrastructure.shared import data_utils
+from src.domain.processors.case_filters import CaseFilters, apply_case_filters
 
 FTP_HOST = "ftp.datasus.gov.br"
 FTP_BASE_PATH = "/dissemin/publicos/ESUSNOTIFICA/DADOS"
@@ -20,7 +21,7 @@ class FetchDataEsusUseCase:
     Ex.: 'DCCR' = Doença de Chagas Crônica (arquivos DCCRBRAA.dbc, nacionais por ano).
     """
 
-    def execute(self, disease_code: str, years: List[int], states: Optional[List[str]] = None) -> Optional[Dict[str, Any]]:
+    def execute(self, disease_code: str, years: List[int], states: Optional[List[str]] = None, filters: Optional[CaseFilters] = None) -> Optional[Dict[str, Any]]:
         try:
             print(f"Buscando arquivos no e-SUS Notifica para o agravo '{disease_code}'...")
             total_counts = Counter()
@@ -47,6 +48,7 @@ class FetchDataEsusUseCase:
                     continue
 
                 filtered_df = data_utils.filter_dataframe_by_states(df, states, municipality_col)
+                filtered_df = apply_case_filters(filtered_df, filters)
 
                 partial_counts = filtered_df.dropna(subset=[municipality_col])[municipality_col].value_counts()
                 total_counts.update(partial_counts.to_dict())

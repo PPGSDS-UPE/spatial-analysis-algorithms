@@ -4,8 +4,9 @@ from typing import List, Optional, Dict, Any
 from fastapi.concurrency import run_in_threadpool
 
 from src.domain.use_cases.pysus.esus.fetch_data_esus_use_case import FetchDataEsusUseCase
+from src.domain.processors.case_filters import CaseFilters
 
-async def fetch_esus_data_controller(disease_code: str, years: List[int], states: Optional[List[str]]):
+async def fetch_esus_data_controller(disease_code: str, years: List[int], states: Optional[List[str]], filters: Optional[CaseFilters] = None):
 
     try:
         params = {
@@ -13,10 +14,14 @@ async def fetch_esus_data_controller(disease_code: str, years: List[int], states
             "years": years,
             "states": states
         }
+        if filters and not filters.is_empty():
+            params["filters"] = filters.to_dict()
 
         use_case = FetchDataEsusUseCase()
 
-        result_dict: Optional[Dict[str, Any]] = await run_in_threadpool(use_case.execute, **params)
+        result_dict: Optional[Dict[str, Any]] = await run_in_threadpool(
+            use_case.execute, disease_code=disease_code, years=years, states=states, filters=filters
+        )
 
         if result_dict and "summary" in result_dict:
 

@@ -11,6 +11,7 @@ from src.services.api_services import (
 )
 
 from src.ui.constants import METRIC_OPTIONS_SINAN
+from src.ui.components.case_filters_section import display_case_filters
 
 def display_sinan_query_section():
     
@@ -69,6 +70,8 @@ def display_sinan_query_section():
                 key="sinan_global_state"
             ).upper()
 
+        case_filters, filters_description = display_case_filters("sinan")
+
     st.markdown("---")
 
     # ==============================================================================
@@ -91,10 +94,12 @@ def display_sinan_query_section():
             params: Dict[str, Any] = {
                 "disease_code": disease_code,
                 "years": year_list,
-                "states": state_list
+                "states": state_list,
+                **case_filters
             }
             
-            st.info(f"Buscando dados: {disease_code}, Ano: {global_year}, Estado: {global_state}")
+            st.info(f"Buscando dados: {disease_code}, Ano: {global_year}, Estado: {global_state}"
+                    + (f" | Filtros: {filters_description}" if filters_description else ""))
 
             with st.spinner("Fetching SINAN data..."):
                 data = fetch_sinan_data(params) 
@@ -153,14 +158,16 @@ def display_sinan_query_section():
                         state_abbr=global_state,  # Reusa variável global
                         year=global_year,         # Reusa variável global
                         metric=metric_column_name,
-                        disease_code=disease_code # Reusa variável global
+                        disease_code=disease_code,
+                        filters=case_filters
                     )
 
                     if map_content:
                         st.success("✅ Map generated successfully!")
                         st.image(
                             BytesIO(map_content),
-                            caption=f"Map: {selected_disease_label} ({metric_label_map}) in {global_state}/{global_year}",
+                            caption=f"Map: {selected_disease_label} ({metric_label_map}) in {global_state}/{global_year}"
+                                    + (f" — Filtros: {filters_description}" if filters_description else ""),
                             use_container_width=True
                         )
                     else:

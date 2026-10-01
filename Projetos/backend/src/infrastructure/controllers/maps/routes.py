@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 from enum import Enum
 
 from .get_map_birthrate_controller import generate_birth_rate_map
 from .get_map_state_controller import generate_state_layers_map
 # 1. IMPORTAR O NOVO CONTROLLER
 from .get_map_prevalence_controller import generate_prevalence_map
+from src.infrastructure.controllers.case_filters_query import case_filters_query
+from src.domain.processors.case_filters import CaseFilters
 
 class BirthRateMetric(str, Enum):
     total_births = "total_births"
@@ -73,7 +75,8 @@ def get_map_prevalence_route(
     source: CaseSource = Query(
         default=CaseSource.sinan,
         description="Fonte dos casos: 'sinan' ou 'esus' (e-SUS Notifica, ex.: 'DCCR' para Chagas Crônica)."
-    )
+    ),
+    filters: CaseFilters = Depends(case_filters_query)
 ):
 
     return generate_prevalence_map(
@@ -81,7 +84,8 @@ def get_map_prevalence_route(
         year=year,
         metric=metric.value,
         disease_code=disease_code,
-        source=source.value
+        source=source.value,
+        filters=filters
     )
 
 @maps_router.get(

@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 from typing import List, Optional
 
 # Os imports dos controllers continuam os mesmos
 from .get_variables_sinan_controller import get_variables_sinan_controller
 from .fetch_data_sinan_controller import fetch_sinan_data_controller
+from src.infrastructure.controllers.case_filters_query import case_filters_query
+from src.domain.processors.case_filters import CaseFilters
 
 sinan_router = APIRouter()
 
@@ -28,7 +30,8 @@ def get_sinan_variables_route():
 async def get_sinan_data_route(
     disease_code: str = Query(..., description="Código do agravo (doença). Ex: 'DENG' para Dengue.", example="DENG"),
     years: List[int] = Query(..., description="Lista de anos para a consulta. Ex: 2022,2023", example=[2023]),
-    states: Optional[List[str]] = Query(None, description="Lista opcional de siglas de estados (UFs) para filtrar. Ex: PE,SP", example=["PE"])
+    states: Optional[List[str]] = Query(None, description="Lista opcional de siglas de estados (UFs) para filtrar. Ex: PE,SP", example=["PE"]),
+    filters: CaseFilters = Depends(case_filters_query)
 ):
     """
     Endpoint para buscar um resumo de dados do SINAN de forma não-bloqueante.
@@ -37,5 +40,6 @@ async def get_sinan_data_route(
     return await fetch_sinan_data_controller(
         disease_code=disease_code,
         years=years,
-        states=states
+        states=states,
+        filters=filters
     )
