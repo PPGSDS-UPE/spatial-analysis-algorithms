@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional
 
-from src.domain.processors.case_filters import CaseFilters
+from src.domain.processors.case_filters import AGE_GROUPS, CaseFilters
 from src.domain.use_cases.ibge.population.fetch_data_population_use_case import FetchDataPopulationUseCase
 from src.domain.use_cases.maps.get_map_prevalence_use_case import CASE_SOURCES
 
@@ -9,7 +9,7 @@ MULTIPLIER = 100_000
 
 class GetChartPrevalenceUseCase:
     """
-    Casos e prevalência no estado para cada valor marcado nos filtros (cor/raça, sexo, escolaridade).
+    Casos e prevalência no estado para cada valor marcado nos filtros (cor/raça, sexo, faixa etária, escolaridade).
 
     Os casos de cada categoria são contados com todos os filtros aplicados (ex.: marcar Feminino e
     Parda/Preta compara Parda x Preta entre mulheres, e Feminino entre pessoas pardas ou pretas).
@@ -46,6 +46,8 @@ class GetChartPrevalenceUseCase:
         selected_by_variable = {
             "race": filters.races,
             "sex": filters.sexes,
+            # Faixas sempre em ordem crescente, independentemente da ordem em que foram marcadas
+            "age_group": sorted(filters.age_groups, key=list(AGE_GROUPS).index) if filters.age_groups else None,
             "education": filters.education_levels,
         }
 

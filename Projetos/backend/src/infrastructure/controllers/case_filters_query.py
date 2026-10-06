@@ -6,7 +6,7 @@ Uso: filters: CaseFilters = Depends(case_filters_query)
 from enum import Enum
 from typing import List, Optional
 
-from fastapi import HTTPException, Query
+from fastapi import Query
 
 from src.domain.processors.case_filters import CaseFilters
 
@@ -26,6 +26,17 @@ class SexOption(str, Enum):
     ignorado = "ignorado"
 
 
+class AgeGroupOption(str, Enum):
+    de_0_a_14 = "0_14"
+    de_15_a_29 = "15_29"
+    de_30_a_39 = "30_39"
+    de_40_a_49 = "40_49"
+    de_50_a_59 = "50_59"
+    de_60_a_69 = "60_69"
+    de_70_a_79 = "70_79"
+    de_80_mais = "80_mais"
+
+
 class EducationOption(str, Enum):
     nenhuma = "nenhuma"
     fundamental_incompleto = "fundamental_incompleto"
@@ -40,20 +51,18 @@ class EducationOption(str, Enum):
 def case_filters_query(
     races: Optional[List[RaceOption]] = Query(None, description="Filtro de cor/raça (CS_RACA). Aceita vários valores."),
     sexes: Optional[List[SexOption]] = Query(None, description="Filtro de sexo (CS_SEXO). Aceita vários valores."),
-    age_min: Optional[int] = Query(None, ge=0, le=130, description="Idade mínima em anos (NU_IDADE_N)."),
-    age_max: Optional[int] = Query(None, ge=0, le=130, description="Idade máxima em anos (NU_IDADE_N)."),
+    age_groups: Optional[List[AgeGroupOption]] = Query(
+        None,
+        description="Faixas etárias (NU_IDADE_N). Aceita vários valores; filtra pela união das faixas."
+    ),
     education_levels: Optional[List[EducationOption]] = Query(
         None,
         description="Nível de escolaridade (CS_ESCOL_N). Os códigos do SINAN são agrupados nas categorias do e-SUS."
     ),
 ) -> CaseFilters:
-    if age_min is not None and age_max is not None and age_min > age_max:
-        raise HTTPException(status_code=422, detail="age_min não pode ser maior que age_max.")
-
     return CaseFilters(
         races=[race.value for race in races] if races else None,
         sexes=[sex.value for sex in sexes] if sexes else None,
-        age_min=age_min,
-        age_max=age_max,
+        age_groups=[group.value for group in age_groups] if age_groups else None,
         education_levels=[level.value for level in education_levels] if education_levels else None,
     )

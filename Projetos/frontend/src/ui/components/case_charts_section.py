@@ -3,12 +3,13 @@ import pandas as pd
 import streamlit as st
 from typing import Any, Dict, Optional, Tuple
 
-from src.ui.constants import METRIC_OPTIONS_SINAN, RACE_OPTIONS, SEX_OPTIONS, EDUCATION_OPTIONS
+from src.ui.constants import METRIC_OPTIONS_SINAN, RACE_OPTIONS, SEX_OPTIONS, AGE_GROUP_OPTIONS, EDUCATION_OPTIONS
 
 # Filtros comparáveis no gráfico: chave em 'series' na resposta da API -> (título, rótulos das categorias)
 CHART_VARIABLES = {
     "race": ("Cor/Raça", {code: label for label, code in RACE_OPTIONS.items()}),
     "sex": ("Sexo", {code: label for label, code in SEX_OPTIONS.items()}),
+    "age_group": ("Faixa etária", {code: label for label, code in AGE_GROUP_OPTIONS.items()}),
     "education": ("Escolaridade", {code: label for label, code in EDUCATION_OPTIONS.items()}),
 }
 
@@ -66,7 +67,7 @@ def display_prevalence_charts(chart_data: Optional[Dict[str, Any]], metric_label
 
     series = chart_data.get("series") or {}
     if not series:
-        st.warning("⚠️ Marque ao menos um valor em Cor/Raça, Sexo ou Escolaridade nos filtros de casos "
+        st.warning("⚠️ Marque ao menos um valor em Cor/Raça, Sexo, Faixa etária ou Escolaridade nos filtros de casos "
                    "para comparar os grupos no gráfico.")
         return
 
@@ -89,4 +90,4 @@ def display_prevalence_charts(chart_data: Optional[Dict[str, Any]], metric_label
         st.caption(caption)
     if metric_column != "total_cases":
         st.caption(f"Denominador: população total do estado ({chart_data.get('population', 0):,} hab.), "
-                   "como no mapa. Faixa etária e os demais filtros marcados restringem os casos de cada grupo.")
+                   "como no mapa. Os demais filtros marcados restringem os casos de cada grupo.")

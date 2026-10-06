@@ -34,6 +34,18 @@ SEX_OPTIONS = {
     "Ignorado": "ignorado",
 }
 
+# Faixas etárias fixas (NU_IDADE_N). Várias faixas marcadas = união delas nos filtros.
+AGE_GROUP_OPTIONS = {
+    "<15 anos": "0_14",
+    "15-29 anos": "15_29",
+    "30-39 anos": "30_39",
+    "40-49 anos": "40_49",
+    "50-59 anos": "50_59",
+    "60-69 anos": "60_69",
+    "70-79 anos": "70_79",
+    "80+ anos": "80_mais",
+}
+
 # Escolaridade (CS_ESCOL_N). O SINAN é agrupado no backend nas mesmas categorias do e-SUS.
 EDUCATION_OPTIONS = {
     "Nenhuma/Analfabeto": "nenhuma",

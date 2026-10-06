@@ -10,7 +10,7 @@ charts_router = APIRouter()
 @charts_router.get(
     "/{state_abbr}/{year}/prevalence",
     tags=["Gráficos"],
-    summary="Casos e prevalência no estado para cada valor marcado nos filtros (cor/raça, sexo, escolaridade)"
+    summary="Casos e prevalência no estado para cada valor marcado nos filtros (cor/raça, sexo, faixa etária, escolaridade)"
 )
 async def get_chart_prevalence_route(
     state_abbr: str,

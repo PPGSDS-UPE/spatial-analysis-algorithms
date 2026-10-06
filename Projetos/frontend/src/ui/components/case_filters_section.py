@@ -1,9 +1,7 @@
 import streamlit as st
 from typing import Dict, Any, List, Tuple
 
-from src.ui.constants import RACE_OPTIONS, SEX_OPTIONS, EDUCATION_OPTIONS
-
-AGE_LIMIT = 120
+from src.ui.constants import RACE_OPTIONS, SEX_OPTIONS, AGE_GROUP_OPTIONS, EDUCATION_OPTIONS
 
 
 def display_case_filters(key_prefix: str) -> Tuple[Dict[str, Any], str]:
@@ -32,11 +30,12 @@ def display_case_filters(key_prefix: str) -> Tuple[Dict[str, Any], str]:
                 help="Vazio = todos."
             )
 
-        age_min, age_max = st.slider(
-            "Faixa etária (anos)",
-            min_value=0, max_value=AGE_LIMIT, value=(0, AGE_LIMIT),
-            key=f"{key_prefix}_filter_age",
-            help="Menores de 1 ano contam como 0. Mantenha 0-120 para não filtrar."
+        selected_age_groups = st.multiselect(
+            "Faixa etária",
+            options=list(AGE_GROUP_OPTIONS.keys()),
+            key=f"{key_prefix}_filter_age_groups",
+            help="Vazio = todas. Marcando várias, a tabela e o mapa usam a união das faixas "
+                 "e o gráfico compara cada faixa. Menores de 1 ano entram em <15."
         )
 
         selected_education = st.multiselect(
@@ -63,12 +62,11 @@ def display_case_filters(key_prefix: str) -> Tuple[Dict[str, Any], str]:
         params["sexes"] = [SEX_OPTIONS[label] for label in selected_sexes]
         description_parts.append(", ".join(selected_sexes))
 
-    if age_min > 0:
-        params["age_min"] = age_min
-    if age_max < AGE_LIMIT:
-        params["age_max"] = age_max
-    if age_min > 0 or age_max < AGE_LIMIT:
-        description_parts.append(f"{age_min}-{age_max} anos" if age_max < AGE_LIMIT else f"{age_min}+ anos")
+    if selected_age_groups:
+        # Ordem crescente, independentemente da ordem em que as faixas foram marcadas
+        ordered_age_groups = [label for label in AGE_GROUP_OPTIONS if label in selected_age_groups]
+        params["age_groups"] = [AGE_GROUP_OPTIONS[label] for label in ordered_age_groups]
+        description_parts.append(", ".join(ordered_age_groups))
 
     if selected_education:
         params["education_levels"] = [EDUCATION_OPTIONS[label] for label in selected_education]
