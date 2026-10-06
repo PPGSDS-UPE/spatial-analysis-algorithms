@@ -7,11 +7,13 @@ from io import BytesIO
 from src.services.api_services import (
     fetch_esus_variables,
     fetch_esus_data,
-    fetch_prevalence_map
+    fetch_prevalence_map,
+    fetch_prevalence_chart
 )
 
 from src.ui.constants import METRIC_OPTIONS_SINAN
 from src.ui.components.case_filters_section import display_case_filters
+from src.ui.components.case_charts_section import display_chart_options, display_prevalence_charts
 
 # Anos publicados no FTP do e-SUS Notifica (FINAIS: 2023; PRELIM: 2024-2025)
 ESUS_MIN_YEAR = 2023
@@ -84,7 +86,9 @@ def display_esus_query_section():
     # ==============================================================================
     # 3. SISTEMA DE ABAS
     # ==============================================================================
-    tab_data, tab_map = st.tabs(["📊 Dados Detalhados (Tabela)", "🗺️ Mapa de Prevalência"])
+    tab_data, tab_charts, tab_map = st.tabs(
+        ["📊 Dados Detalhados (Tabela)", "📈 Gráficos", "🗺️ Mapa de Prevalência"]
+    )
 
     # --------------------------------------------------------------------------
     # ABA 1: TABELA DE DADOS
@@ -129,7 +133,38 @@ def display_esus_query_section():
                     st.error("Data fetching failed. Check API response.")
 
     # --------------------------------------------------------------------------
-    # ABA 2: MAPA DE PREVALÊNCIA
+    # ABA 2: GRÁFICOS (métrica do mapa comparada entre os valores marcados nos filtros)
+    # --------------------------------------------------------------------------
+    with tab_charts:
+        st.subheader("Comparação entre Grupos")
+
+        chart_metric, chart_type, generate_chart = display_chart_options("esus")
+
+        if generate_chart:
+            if not global_state or len(global_state) != 2:
+                st.warning("⚠️ Para gerar o gráfico, preencha o campo 'State (UF)' nos filtros acima.")
+            else:
+                with st.spinner(f"Generating chart for {selected_disease_label} ({chart_metric}) in {global_state}..."):
+
+                    chart_data = fetch_prevalence_chart(
+                        state_abbr=global_state,
+                        year=global_year,
+                        disease_code=disease_code,
+                        source="esus",
+                        filters=case_filters
+                    )
+
+                if chart_data:
+                    display_prevalence_charts(
+                        chart_data, chart_metric, chart_type,
+                        caption=f"{selected_disease_label} | {global_state} | {global_year}"
+                                + (f" — Filtros: {filters_description}" if filters_description else "")
+                    )
+                else:
+                    st.error(f"Failed to generate chart for {selected_disease_label}.")
+
+    # --------------------------------------------------------------------------
+    # ABA 3: MAPA DE PREVALÊNCIA
     # --------------------------------------------------------------------------
     with tab_map:
         st.subheader("Visualização Espacial")

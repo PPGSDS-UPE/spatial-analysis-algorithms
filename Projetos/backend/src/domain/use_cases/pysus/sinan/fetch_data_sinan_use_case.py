@@ -5,7 +5,7 @@ from collections import Counter
 import pyarrow.parquet as pq
 from pathlib import Path 
 from src.infrastructure.shared import data_utils
-from src.domain.processors.case_filters import CaseFilters, apply_case_filters
+from src.domain.processors.case_filters import CaseFilters, apply_case_filters, count_distributions
 
 class FetchDataSinanUseCase:
    
@@ -14,6 +14,7 @@ class FetchDataSinanUseCase:
             print(f"Buscando arquivos no SINAN para o agravo '{disease_code}'...")
             sinan_db = SINAN().load()
             total_counts = Counter()
+            distribution_counts: Dict[str, Counter] = {}
             column_names: Optional[List[str]] = None 
             
             for year in years:
@@ -53,8 +54,11 @@ class FetchDataSinanUseCase:
                         
                         filtered_chunk_df = data_utils.filter_dataframe_by_states(chunk_df, states, municipality_col)
                         filtered_chunk_df = apply_case_filters(filtered_chunk_df, filters)
-                        
-                        partial_counts = filtered_chunk_df.dropna(subset=[municipality_col])[municipality_col].value_counts()
+                        filtered_chunk_df = filtered_chunk_df.dropna(subset=[municipality_col])
+
+                        partial_counts = filtered_chunk_df[municipality_col].value_counts()
+                        for variable, counts in count_distributions(filtered_chunk_df).items():
+                            distribution_counts.setdefault(variable, Counter()).update(counts)
                         total_counts.update(partial_counts.to_dict())
             
             if not total_counts:
@@ -70,7 +74,8 @@ class FetchDataSinanUseCase:
             
             return {
                 "summary": summary_list,
-                "columns": column_names if column_names else [] 
+                "columns": column_names if column_names else [],
+                "distributions": {variable: dict(counts) for variable, counts in distribution_counts.items()}
             }
             
         except Exception as e:

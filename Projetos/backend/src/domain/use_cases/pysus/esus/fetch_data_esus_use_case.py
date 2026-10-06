@@ -7,7 +7,7 @@ from typing import List, Dict, Optional, Any
 from dbfread import DBF
 from pyreaddbc import dbc2dbf
 from src.infrastructure.shared import data_utils
-from src.domain.processors.case_filters import CaseFilters, apply_case_filters
+from src.domain.processors.case_filters import CaseFilters, apply_case_filters, count_distributions
 
 FTP_HOST = "ftp.datasus.gov.br"
 FTP_BASE_PATH = "/dissemin/publicos/ESUSNOTIFICA/DADOS"
@@ -25,6 +25,7 @@ class FetchDataEsusUseCase:
         try:
             print(f"Buscando arquivos no e-SUS Notifica para o agravo '{disease_code}'...")
             total_counts = Counter()
+            distribution_counts: Dict[str, Counter] = {}
             column_names: Optional[List[str]] = None
 
             for year in years:
@@ -49,8 +50,11 @@ class FetchDataEsusUseCase:
 
                 filtered_df = data_utils.filter_dataframe_by_states(df, states, municipality_col)
                 filtered_df = apply_case_filters(filtered_df, filters)
+                filtered_df = filtered_df.dropna(subset=[municipality_col])
 
-                partial_counts = filtered_df.dropna(subset=[municipality_col])[municipality_col].value_counts()
+                partial_counts = filtered_df[municipality_col].value_counts()
+                for variable, counts in count_distributions(filtered_df).items():
+                    distribution_counts.setdefault(variable, Counter()).update(counts)
                 total_counts.update(partial_counts.to_dict())
 
             if not total_counts:
@@ -65,7 +69,8 @@ class FetchDataEsusUseCase:
 
             return {
                 "summary": summary_list,
-                "columns": column_names if column_names else []
+                "columns": column_names if column_names else [],
+                "distributions": {variable: dict(counts) for variable, counts in distribution_counts.items()}
             }
 
         except Exception as e:

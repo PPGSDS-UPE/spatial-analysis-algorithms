@@ -212,6 +212,33 @@ def fetch_prevalence_map(state_abbr: str, year: int, disease_code: str, metric: 
                 # Se falhar ao parsear o JSON, mostra o texto bruto
                 st.write(f"Network error details: {e}")
         return None
+
+@cache_success
+def fetch_prevalence_chart(state_abbr: str, year: int, disease_code: str, source: str = "sinan", filters: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+    """ Requests cases and prevalence for each selected filter value (race, sex, education) from the backend API. """
+    base_url = f"{API_URL}/charts/{state_abbr}/{year}/prevalence"
+    params = {
+        "disease_code": disease_code,
+        "source": source,
+        **(filters or {})
+    }
+
+    st.info(f"Calling API: {base_url} with params: {params}")
+
+    try:
+        response = requests.get(base_url, params=params, timeout=300)
+        response.raise_for_status()
+        return response.json()
+
+    except requests.exceptions.RequestException as e:
+        st.error(f"❌ Error generating prevalence chart in the API.")
+        if e.response is not None:
+            try:
+                error_detail = e.response.json().get("detail", e.response.text)
+                st.write(f"Server error details: {error_detail}")
+            except:
+                st.write(f"Network error details: {e}")
+        return None
     
 @cache_success
 def fetch_regional_layers_map(

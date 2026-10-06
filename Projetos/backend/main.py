@@ -31,6 +31,9 @@ from src.infrastructure.controllers.sidra.routes import sidra_router
 from src.infrastructure.controllers.maps.routes import maps_router
 from src.infrastructure.controllers.maps.routes import get_map_state_layers_route
 
+# Módulo de Gráficos
+from src.infrastructure.controllers.charts.routes import charts_router
+
 # --- 2. INSTÂNCIA PRINCIPAL DA API ---
 app = FastAPI(
     title="API de Dados Abertos e Geografia",
@@ -80,6 +83,9 @@ app.include_router(
     prefix="/maps",
     tags=["Maps"] # A tag já está no arquivo de rotas, mas é bom manter aqui.
 )
+
+# Módulo de Gráficos
+app.include_router(charts_router, prefix="/charts")
 
 
 # --- 5. COMANDO PARA RODAR (NO TERMINAL) ---

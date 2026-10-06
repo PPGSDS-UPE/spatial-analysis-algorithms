@@ -140,3 +140,35 @@ def apply_case_filters(df: pd.DataFrame, filters: Optional[CaseFilters]) -> pd.D
         mask &= _normalized_education(df["CS_ESCOL_N"]).isin(filters.education_levels)
 
     return df[mask.fillna(False)]
+
+
+# --- Distribuições para gráficos -----------------------------------------------------------
+
+NOT_INFORMED = "nao_informado"
+DISTRIBUTION_COLUMNS = {"race": "CS_RACA", "sex": "CS_SEXO", "education": "CS_ESCOL_N"}
+DISTRIBUTION_NORMALIZERS = {
+    "race": _normalized_race,
+    "sex": _normalized_sex,
+    "education": _normalized_education,
+}
+DISTRIBUTION_CATEGORIES = {
+    "race": set(RACE_LABELS),
+    "sex": set(SEX_LABELS),
+    "education": set(EDUCATION_LABELS),
+}
+
+
+def count_distributions(df: pd.DataFrame) -> Dict[str, Dict[str, int]]:
+    """
+    Conta os registros por categoria de cada variável dos filtros (mesmas categorias da API).
+    Valores vazios ou fora das categorias conhecidas viram 'nao_informado'.
+    Variáveis cuja coluna não existe na base são omitidas.
+    """
+    distributions: Dict[str, Dict[str, int]] = {}
+    for variable, column in DISTRIBUTION_COLUMNS.items():
+        if column not in df.columns:
+            continue
+        values = DISTRIBUTION_NORMALIZERS[variable](df[column].dropna()).reindex(df.index)
+        values = values.where(values.isin(DISTRIBUTION_CATEGORIES[variable]), NOT_INFORMED)
+        distributions[variable] = {str(k): int(v) for k, v in values.value_counts().items()}
+    return distributions
