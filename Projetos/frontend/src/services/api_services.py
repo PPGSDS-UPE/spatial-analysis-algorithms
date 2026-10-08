@@ -214,6 +214,33 @@ def fetch_prevalence_map(state_abbr: str, year: int, disease_code: str, metric: 
         return None
 
 @cache_success
+def fetch_prevalence_geojson(state_abbr: str, year: int, disease_code: str, source: str = "sinan", filters: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+    """ Requests the prevalence data as GeoJSON (municipality, cases, population, rate) for the interactive map. """
+    base_url = f"{API_URL}/maps/{state_abbr}/{year}/prevalence-geojson"
+    params = {
+        "disease_code": disease_code,
+        "source": source,
+        **(filters or {})
+    }
+
+    st.info(f"Calling API: {base_url} with params: {params}")
+
+    try:
+        response = requests.get(base_url, params=params, timeout=300)
+        response.raise_for_status()
+        return response.json()
+
+    except requests.exceptions.RequestException as e:
+        st.error(f"❌ Error generating interactive map in the API.")
+        if e.response is not None:
+            try:
+                error_detail = e.response.json().get("detail", e.response.text)
+                st.write(f"Server error details: {error_detail}")
+            except:
+                st.write(f"Network error details: {e}")
+        return None
+
+@cache_success
 def fetch_prevalence_chart(state_abbr: str, year: int, disease_code: str, source: str = "sinan", filters: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
     """ Requests cases and prevalence for each selected filter value (race, sex, education) from the backend API. """
     base_url = f"{API_URL}/charts/{state_abbr}/{year}/prevalence"

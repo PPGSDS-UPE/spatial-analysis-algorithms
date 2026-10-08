@@ -1,19 +1,17 @@
 import streamlit as st
 import pandas as pd
 from typing import Dict, Any
-from io import BytesIO
 
 # Imports dos serviços
 from src.services.api_services import (
     fetch_esus_variables,
     fetch_esus_data,
-    fetch_prevalence_map,
     fetch_prevalence_chart
 )
 
-from src.ui.constants import METRIC_OPTIONS_SINAN
 from src.ui.components.case_filters_section import display_case_filters
 from src.ui.components.case_charts_section import display_chart_options, display_prevalence_charts
+from src.ui.components.prevalence_map_section import display_prevalence_map_tab
 
 # Anos publicados no FTP do e-SUS Notifica (FINAIS: 2023; PRELIM: 2024-2025)
 ESUS_MIN_YEAR = 2023
@@ -167,46 +165,13 @@ def display_esus_query_section():
     # ABA 3: MAPA DE PREVALÊNCIA
     # --------------------------------------------------------------------------
     with tab_map:
-        st.subheader("Visualização Espacial")
-
-        col_metric, col_btn = st.columns([3, 1])
-
-        with col_metric:
-            metric_label_map = st.selectbox(
-                "Metric to Map",
-                options=list(METRIC_OPTIONS_SINAN.keys()),
-                key="esus_map_metric"
-            )
-
-        with col_btn:
-            st.write("")  # Espaçamento
-            st.write("")
-            generate_map = st.button("Gerar Mapa", key="btn_esus_map")
-
-        if generate_map:
-            if not global_state or len(global_state) != 2:
-                st.warning("⚠️ Para gerar o mapa, preencha o campo 'State (UF)' nos filtros acima.")
-            else:
-                metric_column_name = METRIC_OPTIONS_SINAN[metric_label_map]
-
-                with st.spinner(f"Generating map for {selected_disease_label} ({metric_label_map}) in {global_state}..."):
-
-                    map_content = fetch_prevalence_map(
-                        state_abbr=global_state,
-                        year=global_year,
-                        metric=metric_column_name,
-                        disease_code=disease_code,
-                        source="esus",
-                        filters=case_filters
-                    )
-
-                    if map_content:
-                        st.success("✅ Map generated successfully!")
-                        st.image(
-                            BytesIO(map_content),
-                            caption=f"Map: {selected_disease_label} ({metric_label_map}) in {global_state}/{global_year}"
-                                    + (f" — Filtros: {filters_description}" if filters_description else ""),
-                            use_container_width=True
-                        )
-                    else:
-                        st.error(f"Failed to generate map for {selected_disease_label}.")
+        display_prevalence_map_tab(
+            key_prefix="esus",
+            source="esus",
+            disease_code=disease_code,
+            disease_label=selected_disease_label,
+            state=global_state,
+            year=global_year,
+            case_filters=case_filters,
+            filters_description=filters_description,
+        )

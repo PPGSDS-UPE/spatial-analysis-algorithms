@@ -5,6 +5,7 @@ from .get_map_birthrate_controller import generate_birth_rate_map
 from .get_map_state_controller import generate_state_layers_map
 # 1. IMPORTAR O NOVO CONTROLLER
 from .get_map_prevalence_controller import generate_prevalence_map
+from .get_map_prevalence_geojson_controller import generate_prevalence_geojson
 from src.infrastructure.controllers.case_filters_query import case_filters_query
 from src.domain.processors.case_filters import CaseFilters
 
@@ -89,7 +90,31 @@ def get_map_prevalence_route(
     )
 
 @maps_router.get(
-    "/{state_abbr}/{year}/regional-layers", 
+    "/{state_abbr}/{year}/prevalence-geojson",
+    tags=["Mapas"],
+    summary="Dados do mapa de prevalência em GeoJSON (município, casos com filtros, população e taxa) para o mapa interativo"
+)
+async def get_map_prevalence_geojson_route(
+    state_abbr: str,
+    year: int,
+    disease_code: str = Query(..., description="Código do agravo (ex: 'CHAG' no SINAN, 'DCCR' no e-SUS)."),
+    source: CaseSource = Query(
+        default=CaseSource.sinan,
+        description="Fonte dos casos: 'sinan' ou 'esus'."
+    ),
+    filters: CaseFilters = Depends(case_filters_query)
+):
+
+    return await generate_prevalence_geojson(
+        state_abbr=state_abbr,
+        year=year,
+        disease_code=disease_code,
+        source=source.value,
+        filters=filters
+    )
+
+@maps_router.get(
+    "/{state_abbr}/{year}/regional-layers",
     tags=["Mapas"], 
     summary="Gera o mapa de divisões regionais de um estado sobre o contexto nacional (Brasil)."
 )

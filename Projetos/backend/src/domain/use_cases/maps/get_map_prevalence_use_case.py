@@ -1,6 +1,8 @@
 import io
 from typing import Optional
 
+import geopandas as gpd
+
 from src.domain.processors.prevalence_processor import PrevalenceDataProcessor 
 from src.domain.use_cases.ibge.population.fetch_data_population_use_case import FetchDataPopulationUseCase
 from src.domain.use_cases.pysus.sinan.fetch_data_sinan_use_case import FetchDataSinanUseCase
@@ -16,17 +18,19 @@ CASE_SOURCES = {
 
 class GetMapPrevalenceUseCase:
 
-    def execute(
+    def build_dataset(
         self,
         state_abbr: str,
         year: int,
         disease_code: str,
-        metric_column: str,
         source: str = "sinan",
         filters: Optional[CaseFilters] = None
-    ) -> Optional[io.BytesIO]:
-        
-        
+    ) -> Optional[gpd.GeoDataFrame]:
+        """
+        Passos 1 e 2: busca população e casos e une às geometrias dos municípios.
+        Retorna o GeoDataFrame com total_cases, population e prevalence_per_100000.
+        Usado tanto pelo mapa PNG quanto pelo mapa interativo (GeoJSON).
+        """
         print("--- PASSO 1: COLETANDO DADOS ---")
         
         population_use_case = FetchDataPopulationUseCase()
@@ -63,8 +67,29 @@ class GetMapPrevalenceUseCase:
         if merged_gdf is None: 
             print("❌ Falha: Não foi possível processar e unir os dados.")
             return None
-        
-        
+
+        return merged_gdf
+
+    def execute(
+        self,
+        state_abbr: str,
+        year: int,
+        disease_code: str,
+        metric_column: str,
+        source: str = "sinan",
+        filters: Optional[CaseFilters] = None
+    ) -> Optional[io.BytesIO]:
+
+        merged_gdf = self.build_dataset(
+            state_abbr=state_abbr,
+            year=year,
+            disease_code=disease_code,
+            source=source,
+            filters=filters
+        )
+        if merged_gdf is None:
+            return None
+
         print("\n--- PASSO 3: GERANDO MAPA ---")
         
         
