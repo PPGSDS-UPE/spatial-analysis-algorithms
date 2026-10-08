@@ -110,7 +110,7 @@ def plot_map(
         # --- SALVAR EM MEMÓRIA ---
         print(f" -> [Visualização] Salvando mapa em buffer de memória...")
         buf = io.BytesIO()
-        plt.savefig(
+        fig.savefig(
             buf, 
             format='png', 
             dpi=300, 

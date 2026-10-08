@@ -8,9 +8,17 @@ for _stream in (sys.stdout, sys.stderr):
     if hasattr(_stream, "reconfigure"):
         _stream.reconfigure(encoding="utf-8", errors="replace")
 
+# Mapas são gerados em threads da API, sem janela: backend do matplotlib só para imagens
+import matplotlib
+matplotlib.use("Agg")
+
 # Corrige bugs do pysus 1.x (Windows e FTP concorrente); precisa rodar antes dos imports que usam pysus
 from src.infrastructure.shared.pysus_compat import apply_pysus_patches
 apply_pysus_patches()
+
+# Serializa o geobr (conexão DuckDB global, não suporta mapas gerados ao mesmo tempo)
+from src.infrastructure.shared.geobr_compat import apply_geobr_patches
+apply_geobr_patches()
 
 # --- 1. IMPORTS DOS ROTEADORES (CORRIGIDOS) ---
 

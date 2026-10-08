@@ -163,7 +163,7 @@ class GetMapStateLayersUseCase:
         print("Salvando imagem em buffer...")
         try:
             buffer = io.BytesIO()
-            plt.savefig(buffer, format="png", dpi=300, bbox_inches="tight", pad_inches=0)
+            fig.savefig(buffer, format="png", dpi=300, bbox_inches="tight", pad_inches=0)
             plt.close(fig) 
             buffer.seek(0) 
             print(f"--- ✅ Mapa gerado com sucesso! ---")
